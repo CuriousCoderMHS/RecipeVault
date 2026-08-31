@@ -1,0 +1,10 @@
+services:
+  recipevault:
+    image: recipevault:latest
+    volumes:
+    - recipe_data:/app/data
+    - recipe_images:/app/public/generated
+    
+  app:
+    build: .
+    ports: ["3000:3000"]

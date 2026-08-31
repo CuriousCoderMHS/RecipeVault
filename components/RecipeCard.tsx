@@ -1,0 +1,1 @@
+export function RecipeCard(){return <div>Recipe</div>}

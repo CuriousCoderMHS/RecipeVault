@@ -1,0 +1,1 @@
+export function MobileNav(){return <nav>Home Search Add</nav>}

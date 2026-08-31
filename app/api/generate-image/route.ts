@@ -90,7 +90,6 @@ export async function POST(
         const generatedDir =
             path.join(
                 process.cwd(),
-                "public",
                 "generated"
             );
 

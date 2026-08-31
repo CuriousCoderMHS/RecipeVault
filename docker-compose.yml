@@ -1,12 +1,23 @@
 services:
   recipevault:
-    image: recipevault:latest
+    build:
+      context: .
+
+    container_name: recipevault
+
+    restart: unless-stopped
 
     ports:
       - "3000:3000"
 
-    volumes:
-      - ./data:/app/data
-      - ./generated:/app/public/generated
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: file:/app/data/recipevault.db
 
-    restart: unless-stopped
+    volumes:
+      - recipevault_data:/app/data
+      - recipevault_images:/app/public/generated
+
+volumes:
+  recipevault_data:
+  recipevault_images:

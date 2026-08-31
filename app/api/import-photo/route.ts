@@ -5,11 +5,13 @@ import OpenAI from "openai";
 import sharp from "sharp";
 import heicConvert from "heic-convert";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 export async function POST(request: Request) {
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+    });
+
     try {
         const formData = await request.formData();
 

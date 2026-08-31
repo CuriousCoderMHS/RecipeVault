@@ -26,6 +26,7 @@ yarn-error.log*
 app/data/
 data/
 prisma/dev.db-journal
+prisma/.env
 
 # Database backups
 *.db.bak

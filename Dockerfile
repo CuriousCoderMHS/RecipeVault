@@ -1,14 +1,17 @@
-FROM node:22-alpine
+FROM node:22-bookworm
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
+RUN npm ci
 
 COPY . .
 
 RUN npx prisma generate
+RUN ls -la node_modules/.prisma
 
 RUN npm run build
 

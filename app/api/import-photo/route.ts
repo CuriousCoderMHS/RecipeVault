@@ -135,9 +135,9 @@ Return JSON only.
                             },
                             {
                                 type: "input_image",
-                                image_url:
-                                    `data:image/jpeg;base64,${base64Image}`,
-                            },
+                                image_url: `data:image/jpeg;base64,${base64Image}`,
+                                detail: "high",
+                            }
                         ],
                     },
                 ],

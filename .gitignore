@@ -24,6 +24,7 @@ yarn-error.log*
 .env.test.local
 
 # Prisma
+app/
 prisma/dev.db-journal
 
 # Database backups

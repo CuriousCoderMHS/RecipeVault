@@ -75,8 +75,7 @@ export async function generateRecipeImage(
         buffer
     );
 
-    const imagePath =
-        `/generated/${filename}`;
+    const imagePath = `/api/images/${filename}`;
 
     await prisma.recipe.update({
         where: {

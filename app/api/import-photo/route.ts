@@ -120,6 +120,18 @@ Move preparation details into instructions.
 
 Instructions should be complete cooking steps.
 
+Ingredients must be an array of plain strings without bullets.
+
+Instructions must be an array of plain strings without numbering.
+
+Bad:
+["• 1 onion"]
+["1. Chop onion"]
+
+Good:
+["1 onion"]
+["Chop onion"]
+
 imagePrompt should be a detailed photorealistic food photography prompt describing the FINISHED dish.
 
 imagePrompt rules:

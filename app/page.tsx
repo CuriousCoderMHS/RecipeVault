@@ -8,7 +8,7 @@ export default async function Home() {
 
     return (
         <main className="container">
-            <h1>🍳 H-S RecipeVault</h1>
+            <h1>🍳 RecipeVault</h1>
 
             <input className="search" type="text" placeholder="Search recipes..." />
 

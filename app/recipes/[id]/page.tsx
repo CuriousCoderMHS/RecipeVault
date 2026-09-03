@@ -47,6 +47,7 @@ export default async function RecipePage({ params }: Props) {
                     <ul>
                         {(recipe.ingredients || "No ingredients supplied")
                             .split("\n")
+                            .map((line) => line.replace(/^\s*•\s*/, ""))
                             .filter((line) => line.trim() !== "")
                             .map((ingredient, index) => (
                                 <li key={index}>{ingredient}</li>
@@ -58,6 +59,7 @@ export default async function RecipePage({ params }: Props) {
                     <ol>
                         {(recipe.instructions || "No instructions supplied")
                             .split("\n")
+                            .map((line) => line.replace(/^\s*\d+\.\s*/, ""))
                             .filter((line) => line.trim() !== "")
                             .map((step, index) => (
                                 <li key={index}>{step}</li>

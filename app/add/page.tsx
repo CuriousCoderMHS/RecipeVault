@@ -10,11 +10,9 @@ export default function AddRecipe() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
 
-    const [ingredients, setIngredients] =
-        useState("• ");
+    const [ingredients, setIngredients] = useState("");
 
-    const [instructions, setInstructions] =
-        useState("1. ");
+    const [instructions, setInstructions] = useState("");
 
     const [image, setImage] = useState("");
 
@@ -30,9 +28,20 @@ export default function AddRecipe() {
         useRef<HTMLTextAreaElement>(null);
 
 
-    async function handleSubmit(
-        e: React.FormEvent
-    ) {
+    function cleanForStorage(text: string) {
+        return text
+            .split("\n")
+            .map((line) =>
+                line
+                    .replace(/^\s*•\s*/, "")
+                    .replace(/^\s*\d+\.\s*/, "")
+                    .trim()
+            )
+            .filter((l) => l !== "")
+            .join("\n");
+    }
+
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         try {

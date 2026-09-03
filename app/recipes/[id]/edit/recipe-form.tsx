@@ -22,46 +22,9 @@ export default function EditRecipeForm({
     const router = useRouter();
 
     const [title, setTitle] = useState(recipe.title);
-    const [description, setDescription] = useState(
-        recipe.description ?? ""
-    );
-    function formatIngredients(text: string | null) {
-        if (!text) return "• ";
-
-        return text
-            .split("\n")
-            .map((line) => {
-                const cleaned = line.replace(/^•\s*/, "").trim();
-
-                return cleaned ? `• ${cleaned}` : "";
-            })
-            .filter((l) => l !== "")
-            .join("\n");
-    }
-
-    function formatInstructions(text: string | null) {
-        if (!text) return "1. ";
-
-        return text
-            .split("\n")
-            .map((line, index) => {
-                const cleaned = line
-                    .replace(/^\d+\.\s*/, "")
-                    .trim();
-
-                return cleaned ? `${index + 1}. ${cleaned}` : "";
-            })
-            .filter((l) => l !== "")
-            .join("\n");
-    }
-
-    const [ingredients, setIngredients] = useState(
-        formatIngredients(recipe.ingredients)
-    );
-
-    const [instructions, setInstructions] = useState(
-        formatInstructions(recipe.instructions)
-    );
+    const [description, setDescription] = useState(recipe.description ?? "");
+    const [ingredients, setIngredients] = useState(recipe.ingredients ?? "");
+    const [instructions, setInstructions] = useState(recipe.instructions ?? "");
     const [image, setImage] = useState(
         recipe.image ?? ""
     );
@@ -71,28 +34,34 @@ export default function EditRecipeForm({
     const ingredientsRef = useRef<HTMLTextAreaElement>(null);
     const instructionsRef = useRef<HTMLTextAreaElement>(null);
 
-    async function handleSubmit(
-        e: React.FormEvent
-    ) {
+    function cleanForStorage(text: string) {
+        return text
+            .split("\n")
+            .map((line) =>
+                line
+                    .replace(/^\s*•\s*/, "")
+                    .replace(/^\s*\d+\.\s*/, "")
+                    .trim()
+            )
+            .filter((l) => l !== "")
+            .join("\n");
+    }
+
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        const response = await fetch(
-            `/api/recipes/${recipe.id}`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    title,
-                    description,
-                    ingredients,
-                    instructions,
-                    image,
-                    servings,
-                }),
-            }
-        );
+        const response = await fetch(`/api/recipes/${recipe.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                description,
+                ingredients: cleanForStorage(ingredients),
+                instructions: cleanForStorage(instructions),
+                image,
+                servings,
+            }),
+        });
 
         if (!response.ok) {
             alert("Failed to update recipe");

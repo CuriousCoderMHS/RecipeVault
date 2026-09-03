@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 
 interface Recipe {
@@ -34,6 +34,19 @@ export default function EditRecipeForm({
     const ingredientsRef = useRef<HTMLTextAreaElement>(null);
     const instructionsRef = useRef<HTMLTextAreaElement>(null);
 
+    // ensure textareas resize to fit existing content on mount and when values change
+    useEffect(() => {
+        if (ingredientsRef.current) {
+            autoGrow(ingredientsRef.current);
+        }
+    }, [ingredients]);
+
+    useEffect(() => {
+        if (instructionsRef.current) {
+            autoGrow(instructionsRef.current);
+        }
+    }, [instructions]);
+
     function cleanForStorage(text: string) {
         return text
             .split("\n")
@@ -44,6 +57,24 @@ export default function EditRecipeForm({
                     .trim()
             )
             .filter((l) => l !== "")
+            .join("\n");
+    }
+
+    function formatForEditingIngredients(text: string | null) {
+        if (!text) return "• ";
+
+        return text
+            .split("\n")
+            .map((line) => `• ${line}`)
+            .join("\n");
+    }
+
+    function formatForEditingInstructions(text: string | null) {
+        if (!text) return "1. ";
+
+        return text
+            .split("\n")
+            .map((line, idx) => `${idx + 1}. ${line}`)
             .join("\n");
     }
 

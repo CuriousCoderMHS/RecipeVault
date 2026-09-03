@@ -7,8 +7,11 @@ export default function ImportPage() {
     const [url, setUrl] = useState("");
 
     const router = useRouter();
+    const [importing, setImporting] = useState(false);
 
     async function importRecipe() {
+        if (!url) return alert('Please paste a URL to import');
+        setImporting(true);
         const response = await fetch(
             "/api/import",
             {
@@ -24,6 +27,7 @@ export default function ImportPage() {
             const text = await response.text();
             console.error(text);
             alert(text);
+            setImporting(false);
             return;
         }
 
@@ -47,8 +51,8 @@ export default function ImportPage() {
                 }
             />
 
-            <button onClick={importRecipe}>
-                Import
+            <button onClick={importRecipe} disabled={importing}>
+                {importing ? "Importing..." : "Import"}
             </button>
         </main>
     );

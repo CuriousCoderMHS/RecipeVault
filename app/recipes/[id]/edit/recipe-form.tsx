@@ -23,8 +23,12 @@ export default function EditRecipeForm({
 
     const [title, setTitle] = useState(recipe.title);
     const [description, setDescription] = useState(recipe.description ?? "");
-    const [ingredients, setIngredients] = useState(recipe.ingredients ?? "");
-    const [instructions, setInstructions] = useState(recipe.instructions ?? "");
+    const [ingredients, setIngredients] = useState(
+        formatForEditingIngredients(recipe.ingredients ?? "")
+    );
+    const [instructions, setInstructions] = useState(
+        formatForEditingInstructions(recipe.instructions ?? "")
+    );
     const [image, setImage] = useState(
         recipe.image ?? ""
     );

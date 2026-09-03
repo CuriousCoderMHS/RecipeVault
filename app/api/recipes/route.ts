@@ -5,17 +5,41 @@ import {
     generateRecipeImage,
 } from "../../../lib/generateRecipeImage";
 
-export async function GET() {
-    const recipes =
-        await prisma.recipe.findMany({
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
+export async function GET(request: Request) {
+    // Support server-side filtering via query params: keywords, servings, samLikes, harrietLikes
+    // Example: /api/recipes?keywords=chicken&servings=4&samLikes=true
+    const url = new URL(request.url);
+    const keywords = url.searchParams.get("keywords")?.trim() ?? "";
+    const servingsParam = url.searchParams.get("servings");
+    const samLikesParam = url.searchParams.get("samLikes");
+    const harrietLikesParam = url.searchParams.get("harrietLikes");
 
-    return NextResponse.json(
-        recipes
-    );
+    const where: any = {};
+
+    if (servingsParam) {
+        const n = Number(servingsParam);
+        if (!Number.isNaN(n)) where.servings = n;
+    }
+
+    if (samLikesParam === "true") where.samLikes = true;
+    if (harrietLikesParam === "true") where.harrietLikes = true;
+
+    if (keywords) {
+        const kw = keywords;
+        where.OR = [
+            { title: { contains: kw, mode: "insensitive" } },
+            { description: { contains: kw, mode: "insensitive" } },
+            { category: { contains: kw, mode: "insensitive" } },
+            { cuisine: { contains: kw, mode: "insensitive" } },
+            { imagePrompt: { contains: kw, mode: "insensitive" } },
+            { ingredients: { contains: kw, mode: "insensitive" } },
+            { instructions: { contains: kw, mode: "insensitive" } },
+        ];
+    }
+
+    const recipes = await prisma.recipe.findMany({ where, orderBy: { createdAt: "desc" } });
+
+    return NextResponse.json(recipes);
 }
 
 export async function POST(
@@ -41,8 +65,10 @@ export async function POST(
                 instructions:
                     body.instructions,
                 image: body.image,
-                servings:
-                    body.servings,
+                    servings:
+                        body.servings,
+                    samLikes: body.samLikes ?? false,
+                    harrietLikes: body.harrietLikes ?? false,
             },
         });
 

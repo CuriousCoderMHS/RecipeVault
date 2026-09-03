@@ -10,7 +10,9 @@ export default async function Home() {
         <main className="container">
             <h1>🍳 RecipeVault</h1>
 
-            <input className="search" type="text" placeholder="Search recipes..." />
+            <form action="/filter" method="get">
+                <input name="keywords" className="search" type="text" placeholder="Search recipes..." />
+            </form>
 
             {recipes.map((recipe) => (
                 <div key={recipe.id} className="card">
@@ -46,14 +48,26 @@ export default async function Home() {
 
                         {recipe.description && <p>{recipe.description}</p>}
 
-                        <small>Serves {recipe.servings ?? "N/A"}</small>
+                        <small className="servings">
+                            Serves {recipe.servings ?? "N/A"}
+                            {(recipe as any).samLikes ? (
+                                <Link href={`/filter?samLikes=true`} title="Show recipes Sam likes" aria-label="Show recipes Sam likes">
+                                    <span className="like-emoji">👦</span>
+                                </Link>
+                            ) : null}
+                            {(recipe as any).harrietLikes ? (
+                                <Link href={`/filter?harrietLikes=true`} title="Show recipes Harriet likes" aria-label="Show recipes Harriet likes">
+                                    <span className="like-emoji">👧</span>
+                                </Link>
+                            ) : null}
+                        </small>
                     </div>
                 </div>
             ))}
 
             <nav className="nav">
                 <Link href="/">🏠</Link>
-                <Link href="/search">🔍</Link>
+                <Link href="/filter">🔍</Link>
                 <Link href="/add">➕</Link>
                 <Link href="/import">🌍</Link>
                 <Link href="/import-photo">📸</Link>

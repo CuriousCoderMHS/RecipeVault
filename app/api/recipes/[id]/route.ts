@@ -28,6 +28,8 @@ export async function PUT(
             instructions: body.instructions,
             image: body.image,
             servings: body.servings,
+            samLikes: body.samLikes ?? false,
+            harrietLikes: body.harrietLikes ?? false,
         }
     });
 

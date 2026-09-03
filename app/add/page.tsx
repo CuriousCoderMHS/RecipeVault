@@ -17,6 +17,8 @@ export default function AddRecipe() {
     const [image, setImage] = useState("");
 
     const [servings, setServings] = useState(4);
+    const [samLikes, setSamLikes] = useState(false);
+    const [harrietLikes, setHarrietLikes] = useState(false);
 
     const [saving, setSaving] =
         useState(false);
@@ -238,6 +240,23 @@ export default function AddRecipe() {
                         rows={1}
                     />
                 </p>
+                <p>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={samLikes}
+                            onChange={(e) => setSamLikes(e.target.checked)}
+                        /> Sam likes
+                    </label>
+                    <br />
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={harrietLikes}
+                            onChange={(e) => setHarrietLikes(e.target.checked)}
+                        /> Harriet likes
+                    </label>
+                </p>
 
                 <button
                     type="submit"
@@ -251,10 +270,9 @@ export default function AddRecipe() {
 
             <nav className="nav">
                 <Link href="/">🏠</Link>
+                <Link href="/filter">🔍</Link>
                 <Link href="/add">➕</Link>
-                <Link href="/settings">
-                    ⚙️
-                </Link>
+                <Link href="/settings">⚙️</Link>
             </nav>
         </main>
     );

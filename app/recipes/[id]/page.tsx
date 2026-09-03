@@ -27,6 +27,9 @@ export default async function RecipePage({ params }: Props) {
         );
     }
 
+    const samLikes = (recipe as any).samLikes;
+    const harrietLikes = (recipe as any).harrietLikes;
+
     return (
         <main className="container">
             <div className="card">
@@ -40,7 +43,19 @@ export default async function RecipePage({ params }: Props) {
                 <div className="card-content">
                     <h1>{recipe.title}</h1>
                     <p>{recipe.description}</p>
-                    <p>Servings: {recipe.servings}</p>
+                        <p className="servings">
+                        Serves {recipe.servings}
+                        {samLikes ? (
+                            <Link href="/filter?samLikes=true" title="Show recipes Sam likes" aria-label="Show recipes Sam likes">
+                                <span className="like-emoji">👦</span>
+                            </Link>
+                        ) : null}
+                        {harrietLikes ? (
+                            <Link href="/filter?harrietLikes=true" title="Show recipes Harriet likes" aria-label="Show recipes Harriet likes">
+                                <span className="like-emoji">👧</span>
+                            </Link>
+                        ) : null}
+                    </p>
 
                     <h2>Ingredients</h2>
 
@@ -69,6 +84,7 @@ export default async function RecipePage({ params }: Props) {
             </div>
             <nav className="nav">
                 <Link href="/">🏠</Link>
+                <Link href="/filter">🔍</Link>
                 <Link href={`/recipes/${recipe.id}/edit`}>📝</Link>
                 <DeleteButton id={recipe.id} />
                 <Link href="/settings">⚙️</Link>

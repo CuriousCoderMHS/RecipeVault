@@ -22,6 +22,8 @@ model Recipe {
   cuisine      String?
 
   servings     Int?
+  samLikes     Boolean  @default(false)
+  harrietLikes Boolean  @default(false)
 
 
   createdAt    DateTime @default(now())

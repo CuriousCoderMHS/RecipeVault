@@ -12,6 +12,8 @@ interface Recipe {
     instructions: string | null;
     image: string | null;
     servings: number | null;
+    samLikes?: boolean | null;
+    harrietLikes?: boolean | null;
 }
 
 export default function EditRecipeForm({
@@ -35,6 +37,8 @@ export default function EditRecipeForm({
     const [servings, setServings] = useState(
         recipe.servings ?? 4
     );
+    const [samLikes, setSamLikes] = useState(recipe.samLikes ?? false);
+    const [harrietLikes, setHarrietLikes] = useState(recipe.harrietLikes ?? false);
     const ingredientsRef = useRef<HTMLTextAreaElement>(null);
     const instructionsRef = useRef<HTMLTextAreaElement>(null);
 
@@ -95,6 +99,8 @@ export default function EditRecipeForm({
                 instructions: cleanForStorage(instructions),
                 image,
                 servings,
+                samLikes,
+                harrietLikes,
             }),
         });
 
@@ -186,19 +192,38 @@ export default function EditRecipeForm({
                     />
                 </p>
 
-                <p>
-                    <label>Servings</label>
-                    <br />
-                    <input
-                        type="number"
-                        value={servings}
-                        onChange={(e) =>
-                            setServings(
-                                Number(e.target.value)
-                            )
-                        }
-                    />
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ flex: '0 0 120px' }}>
+                        <label>Servings</label>
+                        <br />
+                        <input
+                            type="number"
+                            value={servings}
+                            onChange={(e) => setServings(Number(e.target.value))}
+                            style={{ width: 100 }}
+                        />
+                    </div>
+
+                    <div className="likes-row" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <input
+                                type="checkbox"
+                                checked={samLikes}
+                                onChange={(e) => setSamLikes(e.target.checked)}
+                            />
+                            Sam likes
+                        </label>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <input
+                                type="checkbox"
+                                checked={harrietLikes}
+                                onChange={(e) => setHarrietLikes(e.target.checked)}
+                            />
+                            Harriet likes
+                        </label>
+                    </div>
+                </div>
 
                 <p>
                     <label>Ingredients</label>

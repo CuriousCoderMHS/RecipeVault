@@ -24,6 +24,7 @@ model Recipe {
   servings     Int?
   samLikes     Boolean  @default(false)
   harrietLikes Boolean  @default(false)
+  favourite    Boolean  @default(false)
 
 
   createdAt    DateTime @default(now())

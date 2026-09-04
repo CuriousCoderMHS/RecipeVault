@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const servingsParam = url.searchParams.get("servings");
     const samLikesParam = url.searchParams.get("samLikes");
     const harrietLikesParam = url.searchParams.get("harrietLikes");
+    const favouriteParam = url.searchParams.get("favourite");
 
     const where: any = {};
 
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
 
     if (samLikesParam === "true") where.samLikes = true;
     if (harrietLikesParam === "true") where.harrietLikes = true;
+    if (favouriteParam === "true") where.favourite = true;
 
     if (keywords) {
         const kw = keywords;
@@ -69,6 +71,7 @@ export async function POST(
                         body.servings,
                     samLikes: body.samLikes ?? false,
                     harrietLikes: body.harrietLikes ?? false,
+                    favourite: body.favourite ?? false,
             },
         });
 

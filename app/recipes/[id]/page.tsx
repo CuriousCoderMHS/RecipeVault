@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { prisma } from "../../../lib/prisma";
+import FavouriteToggle from "../../components/FavouriteToggle";
 import DeleteButton from "./DeleteButton";
 
 type Props = {
@@ -29,6 +30,7 @@ export default async function RecipePage({ params }: Props) {
 
     const samLikes = (recipe as any).samLikes;
     const harrietLikes = (recipe as any).harrietLikes;
+    const favourite = (recipe as any).favourite;
 
     return (
         <main className="container">
@@ -41,7 +43,10 @@ export default async function RecipePage({ params }: Props) {
                     />
                 )}
                 <div className="card-content">
-                    <h1>{recipe.title}</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <h1 style={{ margin: 0 }}>{recipe.title}</h1>
+                        <FavouriteToggle id={recipe.id} initial={favourite} />
+                    </div>
                     <p>{recipe.description}</p>
                         <p className="servings">
                         Serves {recipe.servings}
@@ -53,6 +58,11 @@ export default async function RecipePage({ params }: Props) {
                         {harrietLikes ? (
                             <Link href="/filter?harrietLikes=true" title="Show recipes Harriet likes" aria-label="Show recipes Harriet likes">
                                 <span className="like-emoji">👧</span>
+                            </Link>
+                        ) : null}
+                        {favourite ? (
+                            <Link href="/favorites" title="Show favourite recipes" aria-label="Show favourite recipes">
+                                <span className="like-emoji">❤️</span>
                             </Link>
                         ) : null}
                     </p>

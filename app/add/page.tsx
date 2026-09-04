@@ -19,6 +19,7 @@ export default function AddRecipe() {
     const [servings, setServings] = useState(4);
     const [samLikes, setSamLikes] = useState(false);
     const [harrietLikes, setHarrietLikes] = useState(false);
+    const [favourite, setFavourite] = useState(false);
 
     const [saving, setSaving] =
         useState(false);
@@ -256,6 +257,14 @@ export default function AddRecipe() {
                             onChange={(e) => setHarrietLikes(e.target.checked)}
                         /> Harriet likes
                     </label>
+                <br />
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={favourite}
+                        onChange={(e) => setFavourite(e.target.checked)}
+                    /> Favourite
+                </label>
                 </p>
 
                 <button

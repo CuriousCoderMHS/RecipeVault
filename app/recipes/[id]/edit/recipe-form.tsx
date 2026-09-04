@@ -14,6 +14,7 @@ interface Recipe {
     servings: number | null;
     samLikes?: boolean | null;
     harrietLikes?: boolean | null;
+    favourite?: boolean | null;
 }
 
 export default function EditRecipeForm({
@@ -39,6 +40,7 @@ export default function EditRecipeForm({
     );
     const [samLikes, setSamLikes] = useState(recipe.samLikes ?? false);
     const [harrietLikes, setHarrietLikes] = useState(recipe.harrietLikes ?? false);
+    const [favourite, setFavourite] = useState(recipe.favourite ?? false);
     const ingredientsRef = useRef<HTMLTextAreaElement>(null);
     const instructionsRef = useRef<HTMLTextAreaElement>(null);
 
@@ -222,6 +224,14 @@ export default function EditRecipeForm({
                             />
                             Harriet likes
                         </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                        type="checkbox"
+                        checked={favourite}
+                        onChange={(e) => setFavourite(e.target.checked)}
+                    />
+                    Favourite
+                </label>
                     </div>
                 </div>
 

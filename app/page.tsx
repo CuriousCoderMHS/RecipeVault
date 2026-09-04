@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import FavouriteToggle from "./components/FavouriteToggle";
 import { prisma } from "../lib/prisma";
 
 export default async function Home() {
@@ -46,6 +47,10 @@ export default async function Home() {
                             <Link href={`/recipes/${recipe.id}`}>{recipe.title}</Link>
                         </h2>
 
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <FavouriteToggle id={recipe.id} initial={(recipe as any).favourite} />
+                        </div>
+
                         {recipe.description && <p>{recipe.description}</p>}
 
                         <small className="servings">
@@ -58,6 +63,11 @@ export default async function Home() {
                             {(recipe as any).harrietLikes ? (
                                 <Link href={`/filter?harrietLikes=true`} title="Show recipes Harriet likes" aria-label="Show recipes Harriet likes">
                                     <span className="like-emoji">👧</span>
+                                </Link>
+                            ) : null}
+                            {(recipe as any).favourite ? (
+                                <Link href={`/favorites`} title="Show favourite recipes" aria-label="Show favourite recipes">
+                                    <span className="like-emoji">❤️</span>
                                 </Link>
                             ) : null}
                         </small>

@@ -30,6 +30,7 @@ export async function PUT(
             servings: body.servings,
             samLikes: body.samLikes ?? false,
             harrietLikes: body.harrietLikes ?? false,
+            favourite: body.favourite ?? false,
         }
     });
 

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "../../../lib/prisma";
 import FavouriteToggle from "../../components/FavouriteToggle";
+import ExportToOurGroceries from "../../components/ExportToOurGroceries";
 import DeleteButton from "./DeleteButton";
 
 type Props = {
@@ -96,6 +97,7 @@ export default async function RecipePage({ params }: Props) {
                 <Link href="/">🏠</Link>
                 <Link href="/filter">🔍</Link>
                 <Link href={`/recipes/${recipe.id}/edit`}>📝</Link>
+                <ExportToOurGroceries id={recipe.id} />
                 <DeleteButton id={recipe.id} />
                 <Link href="/settings">⚙️</Link>
             </nav>

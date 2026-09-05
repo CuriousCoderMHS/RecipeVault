@@ -197,23 +197,26 @@ export async function POST(
         //
         // CREATE LIST
         //
-        const createPayload: any = {
+        const createPayload = {
             command: "createList",
             name: recipe.title,
+            listType: "RECIPE",
+            locale: "en-US",
+            shareId: null,
+            teamId,
         };
 
         if (teamId) {
             createPayload.teamId = teamId;
         }
 
-        if (categoryId) {
-            createPayload.listType = "LIST";
-        }
-
         const apiHeaders = {
-            "Content-Type": "application/json",
-            Cookie:
-                `ourgroceries-auth=${sessionCookie}`,
+            "Content-Type": "application/json; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Origin": "https://www.ourgroceries.com",
+            "Referer": "https://www.ourgroceries.com/your-lists",
+            "Cookie": `ourgroceries-auth=${sessionCookie}`,
         };
 
         console.log(
@@ -222,7 +225,7 @@ export async function POST(
         );
 
         const createResponse = await fetch(
-            "https://www.ourgroceries.com/your-lists/",
+            "https://www.ourgroceries.com/your-lists",
             {
                 method: "POST",
                 headers: apiHeaders,
@@ -230,7 +233,25 @@ export async function POST(
             }
         );
 
-        const responseText = await createResponse.text();
+        console.log(
+            "[EXPORT API] create status:",
+            createResponse.status
+        );
+
+        console.log(
+            "[EXPORT API] create location:",
+            createResponse.headers.get("location")
+        );
+
+        const createResponseText =
+            await createResponse.text();
+
+        console.log(
+            "[EXPORT API] create body:",
+            createResponseText
+        );
+
+        const responseText = createResponseText
 
         console.log(
             "[EXPORT API] createList raw response:",
@@ -284,37 +305,51 @@ export async function POST(
         );
 
         //
-        // INSERT ITEMS
+        // IMPORT ITEMS
         //
-        const insertPayload = {
-            command: "insertItems",
-            items: items.map((value) => ({
-                listId: createdListId,
-                value,
-            })),
+        const importPayload = {
+            command: "importItems",
+            listId: createdListId,
+            preview: false,
+            files: [
+                items.join("\n")
+            ],
+            locale: "en-US",
+            shareId: null,
+            teamId,
         };
 
-        const insertResponse = await fetch(
-            "https://www.ourgroceries.com/your-lists/",
+        console.log(
+            "[EXPORT API] import payload:",
+            JSON.stringify(importPayload, null, 2)
+        );
+
+        const importResponse = await fetch(
+            "https://www.ourgroceries.com/your-lists",
             {
                 method: "POST",
                 headers: apiHeaders,
-                body: JSON.stringify(insertPayload),
+                body: JSON.stringify(importPayload),
             }
         );
 
-        if (!insertResponse.ok) {
-            const txt = await insertResponse.text();
+        const importBody = await importResponse.text();
 
-            console.error(
-                "[EXPORT API] insertItems failed:",
-                txt
-            );
+        console.log(
+            "[EXPORT API] import status:",
+            importResponse.status
+        );
 
+        console.log(
+            "[EXPORT API] import body:",
+            importBody
+        );
+
+        if (!importResponse.ok) {
             return NextResponse.json(
                 {
-                    error: "Insert failed",
-                    detail: txt,
+                    error: "Import failed",
+                    detail: importBody,
                 },
                 { status: 502 }
             );
@@ -323,7 +358,6 @@ export async function POST(
         return NextResponse.json({
             success: true,
             message: "Exported to OurGroceries",
-            recipeId,
             listId: createdListId,
             itemCount: items.length,
         });

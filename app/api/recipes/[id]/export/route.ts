@@ -1,128 +1,356 @@
 import { prisma } from "../../../../../lib/prisma";
 import { NextResponse } from "next/server";
 
-// POST /api/recipes/:id/export
-export async function POST(request: Request, { params }: { params: { id: string } }) {
-    const id = params.id;
+export async function POST(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
 
-    console.log("[EXPORT API] POST hit for id=", id);
+    console.log("[EXPORT API] POST hit for id =", id);
+
+    const recipeId = Number(id);
+
+    if (!id || Number.isNaN(recipeId)) {
+        return NextResponse.json(
+            {
+                error: "Invalid recipe id",
+                received: id,
+            },
+            { status: 400 }
+        );
+    }
 
     const email = process.env.OURGROCERIES_EMAIL;
     const password = process.env.OURGROCERIES_PASSWORD;
     const envListId = process.env.OURGROCERIES_LIST_ID;
 
     if (!email || !password) {
-        return NextResponse.json({ error: "OURGROCERIES_EMAIL and OURGROCERIES_PASSWORD must be set in environment" }, { status: 500 });
+        return NextResponse.json(
+            {
+                error:
+                    "OURGROCERIES_EMAIL and OURGROCERIES_PASSWORD must be configured",
+            },
+            { status: 500 }
+        );
     }
 
     try {
-        const recipe = await prisma.recipe.findUnique({ where: { id: Number(id) } });
-        if (!recipe) return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
-
-        const BASE_URL = "https://www.ourgroceries.com";
-        const SIGN_IN = `${BASE_URL}/sign-in`;
-        const YOUR_LISTS = `${BASE_URL}/your-lists/`;
-        const COOKIE_KEY = "ourgroceries-auth";
-
-        // 1) sign-in (form POST)
-        console.log("[EXPORT API] signing in to OurGroceries as", email);
-        const form = new URLSearchParams();
-        form.append("emailAddress", String(email));
-        form.append("password", String(password));
-        form.append("action", "sign-in");
-
-        const signRes = await fetch(SIGN_IN, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: form.toString(),
+        //
+        // LOAD RECIPE
+        //
+        const recipe = await prisma.recipe.findUnique({
+            where: {
+                id: recipeId,
+            },
         });
 
-        // extract session cookie from Set-Cookie header
-        const setCookieHeader = signRes.headers.get("set-cookie") || "";
-        let sessionCookie: string | null = null;
-        if (setCookieHeader) {
-            const m = setCookieHeader.match(new RegExp(`${COOKIE_KEY}=([^;]+)`));
-            if (m) sessionCookie = m[1];
+        if (!recipe) {
+            return NextResponse.json(
+                { error: "Recipe not found" },
+                { status: 404 }
+            );
         }
+
+        //
+        // LOGIN
+        //
+        console.log("[EXPORT API] Logging in");
+
+        const loginForm = new URLSearchParams();
+
+        loginForm.append("emailAddress", email);
+        loginForm.append("password", password);
+        loginForm.append("action", "sign-in");
+
+        const loginResponse = await fetch(
+            "https://www.ourgroceries.com/sign-in",
+            {
+                method: "POST",
+                redirect: "manual",
+                headers: {
+                    "Content-Type":
+                        "application/x-www-form-urlencoded",
+                },
+                body: loginForm.toString(),
+            }
+        );
+
+        console.log(
+            "[EXPORT API] Login status:",
+            loginResponse.status
+        );
+
+        console.log(
+            "[EXPORT API] Redirect:",
+            loginResponse.headers.get("location")
+        );
+
+        const setCookieHeader =
+            loginResponse.headers.get("set-cookie") ?? "";
+
+        console.log(
+            "[EXPORT API] Set Cookie:",
+            setCookieHeader
+        );
+
+        const cookieMatch = setCookieHeader.match(
+            /ourgroceries-auth=([^;]+)/
+        );
+
+        const sessionCookie = cookieMatch?.[1];
 
         if (!sessionCookie) {
-            const txt = await signRes.text();
-            console.error("[EXPORT API] sign-in did not return session cookie", signRes.status, txt);
-            return NextResponse.json({ error: "Login failed: no session cookie returned", detail: txt }, { status: 502 });
+            return NextResponse.json(
+                {
+                    error:
+                        "Login succeeded but no auth cookie was found",
+                    status: loginResponse.status,
+                },
+                { status: 502 }
+            );
         }
 
-        // 2) GET /your-lists/ to extract team/master ids
-        const listsRes = await fetch(YOUR_LISTS, { headers: { Cookie: `${COOKIE_KEY}=${sessionCookie}` } });
-        const listsText = await listsRes.text();
+        console.log(
+            "[EXPORT API] Authenticated successfully"
+        );
 
-        const teamMatch = listsText.match(/g_teamId = "(.*)";/);
-        const teamId = teamMatch ? teamMatch[1] : undefined;
+        //
+        // LOAD LIST PAGE
+        //
+        const listsResponse = await fetch(
+            "https://www.ourgroceries.com/your-lists",
+            {
+                headers: {
+                    Cookie:
+                        `ourgroceries-auth=${sessionCookie}`,
+                },
+            }
+        );
 
-        const masterMatch = listsText.match(/g_masterListUrl = "\/your-lists\/list\/(\S*)"/);
-        const masterListId = masterMatch ? masterMatch[1] : undefined;
+        const listsHtml = await listsResponse.text();
 
-        const metalistMatch = listsText.match(/g_staticMetalist = (\[([\s\S]*?)\]);/);
-        let categoryId: string | undefined = undefined;
+        console.log(
+            "[EXPORT API] g_teamId:",
+            listsHtml.includes("g_teamId")
+        );
+
+        //
+        // EXTRACT TEAM ID
+        //
+        const teamMatch = listsHtml.match(
+            /g_teamId = "(.*?)";/
+        );
+
+        const teamId = teamMatch?.[1];
+
+        console.log(
+            "[EXPORT API] teamId:",
+            teamId
+        );
+
+        //
+        // EXTRACT MASTER LIST
+        //
+        const masterMatch = listsHtml.match(
+            /g_masterListUrl = "\/your-lists\/list\/([^"]+)"/
+        );
+
+        const masterListId = masterMatch?.[1];
+
+        console.log(
+            "[EXPORT API] masterListId:",
+            masterListId
+        );
+
+        //
+        // EXTRACT CATEGORY LIST
+        //
+        let categoryId: string | undefined;
+
+        const metalistMatch = listsHtml.match(
+            /g_staticMetalist = (\[[\s\S]*?\]);/
+        );
+
         if (metalistMatch) {
             try {
-                const arr = JSON.parse(metalistMatch[1]);
-                const categoryList = arr.find((l: any) => l.listType === "CATEGORY");
-                if (categoryList) categoryId = categoryList.id;
-            } catch {
-                // ignore
+                const meta = JSON.parse(metalistMatch[1]);
+
+                const categoryList = meta.find(
+                    (x: any) => x.listType === "CATEGORY"
+                );
+
+                categoryId = categoryList?.id;
+            } catch (err) {
+                console.warn(
+                    "[EXPORT API] Failed parsing metalist",
+                    err
+                );
             }
         }
 
-        // prepare items
-        const itemsArr = (recipe.ingredients || "")
-            .split("\n")
-            .map((l) => l.replace(/^\s*•\s*/, "").trim())
-            .filter((l) => l !== "");
+        console.log(
+            "[EXPORT API] categoryId:",
+            categoryId
+        );
 
-        // 3) create list via command=createList
-        const createPayload: any = { command: "createList", name: recipe.title };
-        if (teamId) createPayload.teamId = teamId;
-        if (categoryId) createPayload.listType = "LIST";
+        //
+        // CREATE LIST
+        //
+        const createPayload: any = {
+            command: "createList",
+            name: recipe.title,
+        };
 
-        const postHeaders: any = { "Content-Type": "application/json" };
-        postHeaders["Cookie"] = `${COOKIE_KEY}=${sessionCookie}`;
+        if (teamId) {
+            createPayload.teamId = teamId;
+        }
 
-        const createRes = await fetch(YOUR_LISTS, { method: "POST", headers: postHeaders, body: JSON.stringify(createPayload) });
-        let createdJson: any = {};
+        if (categoryId) {
+            createPayload.listType = "LIST";
+        }
+
+        const apiHeaders = {
+            "Content-Type": "application/json",
+            Cookie:
+                `ourgroceries-auth=${sessionCookie}`,
+        };
+
+        console.log(
+            "[EXPORT API] Creating list:",
+            createPayload
+        );
+
+        const createResponse = await fetch(
+            "https://www.ourgroceries.com/your-lists/",
+            {
+                method: "POST",
+                headers: apiHeaders,
+                body: JSON.stringify(createPayload),
+            }
+        );
+
+        const responseText = await createResponse.text();
+
+        console.log(
+            "[EXPORT API] createList raw response:",
+            responseText
+        );
+
+        let createJson: any = {};
+
         try {
-            createdJson = await createRes.json();
-        } catch (e) {
-            const txt = await createRes.text();
-            console.warn("create list returned non-json:", txt);
+            createJson = JSON.parse(responseText);
+        } catch {
+            createJson = { rawResponse: responseText };
         }
 
-        const newListId = createdJson?.id ?? createdJson?.listId ?? createdJson?.uid ?? createdJson?.result?.id ?? envListId ?? masterListId;
-        if (!newListId && !envListId && !masterListId) {
-            return NextResponse.json({ error: "Could not determine created list id" }, { status: 502 });
+        console.log(
+            "[EXPORT API] createList result:",
+            createJson
+        );
+
+        const createdListId =
+            createJson?.id ??
+            createJson?.listId ??
+            createJson?.uid ??
+            createJson?.result?.id ??
+            envListId ??
+            masterListId;
+
+        if (!createdListId) {
+            return NextResponse.json(
+                {
+                    error:
+                        "Could not determine created list id",
+                    response: createJson,
+                },
+                { status: 502 }
+            );
         }
 
-        const targetListId = newListId ?? envListId ?? masterListId;
+        //
+        // BUILD ITEMS
+        //
+        const items = (recipe.ingredients ?? "")
+            .split("\n")
+            .map((line) =>
+                line.replace(/^\s*[•*-]\s*/, "").trim()
+            )
+            .filter(Boolean);
 
-        // 4) insert items via command=insertItems
-        const payloadItems = itemsArr.map((v) => ({ listId: targetListId, value: v }));
-        const insertPayload = { command: "insertItems", items: payloadItems };
+        console.log(
+            `[EXPORT API] Exporting ${items.length} items`
+        );
 
-        const insertRes = await fetch(YOUR_LISTS, { method: "POST", headers: postHeaders, body: JSON.stringify(insertPayload) });
-        if (!insertRes.ok) {
-            const text = await insertRes.text();
-            console.error("insert items error:", insertRes.status, text);
-            return NextResponse.json({ error: "Failed to insert items", detail: text }, { status: 502 });
+        //
+        // INSERT ITEMS
+        //
+        const insertPayload = {
+            command: "insertItems",
+            items: items.map((value) => ({
+                listId: createdListId,
+                value,
+            })),
+        };
+
+        const insertResponse = await fetch(
+            "https://www.ourgroceries.com/your-lists/",
+            {
+                method: "POST",
+                headers: apiHeaders,
+                body: JSON.stringify(insertPayload),
+            }
+        );
+
+        if (!insertResponse.ok) {
+            const txt = await insertResponse.text();
+
+            console.error(
+                "[EXPORT API] insertItems failed:",
+                txt
+            );
+
+            return NextResponse.json(
+                {
+                    error: "Insert failed",
+                    detail: txt,
+                },
+                { status: 502 }
+            );
         }
 
-        return NextResponse.json({ message: "Exported to OurGroceries", listId: targetListId });
-    } catch (err: any) {
-        console.error("EXPORT ERROR:", err);
-        return NextResponse.json({ error: String(err) }, { status: 500 });
+        return NextResponse.json({
+            success: true,
+            message: "Exported to OurGroceries",
+            recipeId,
+            listId: createdListId,
+            itemCount: items.length,
+        });
+    } catch (err) {
+        console.error("[EXPORT API] ERROR", err);
+
+        return NextResponse.json(
+            {
+                error:
+                    err instanceof Error
+                        ? err.message
+                        : String(err),
+            },
+            { status: 500 }
+        );
     }
 }
 
-// GET handler for quick route check
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-    const id = params.id;
-    return NextResponse.json({ ok: true, id: Number(id) });
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
+
+    return NextResponse.json({
+        ok: true,
+        id,
+        numericId: Number(id),
+    });
 }
